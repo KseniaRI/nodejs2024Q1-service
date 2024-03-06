@@ -12,7 +12,7 @@ import { IUser } from 'src/types/interfaces';
 
 @Injectable()
 export class UserService {
-  private users = [];
+  private users: IUser[] = [];
 
   async getUsers() {
     return this.users.map((user) => {

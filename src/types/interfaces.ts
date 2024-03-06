@@ -7,3 +7,9 @@ export interface IUser {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface IArtist {
+  id: string;
+  name: string;
+  grammy: boolean;
+}
