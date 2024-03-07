@@ -6,15 +6,9 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { validateIdFormat } from 'src/heplers/validateIdFormat';
 import { IAlbum } from 'src/types/interfaces';
-import { CreateAlbumDto, TArtistId } from './dto/create-album.dto';
+import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-
-const isTArtistIdValid = (artistId: TArtistId) => {
-  if (artistId) {
-    validateIdFormat(artistId);
-  }
-  return typeof artistId === 'string' || artistId === null;
-};
+import { isIdValid } from 'src/heplers/isIdValid';
 
 @Injectable()
 export class AlbumService {
@@ -40,7 +34,7 @@ export class AlbumService {
       !createAlbumDto.name ||
       typeof createAlbumDto.year !== 'number' ||
       typeof createAlbumDto.name !== 'string' ||
-      !isTArtistIdValid(createAlbumDto.artistId)
+      !isIdValid(createAlbumDto.artistId)
     ) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',
@@ -70,7 +64,7 @@ export class AlbumService {
       !updateAlbumDto.name ||
       typeof updateAlbumDto.year !== 'number' ||
       typeof updateAlbumDto.name !== 'string' ||
-      !isTArtistIdValid(updateAlbumDto.artistId)
+      !isIdValid(updateAlbumDto.artistId)
     ) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',

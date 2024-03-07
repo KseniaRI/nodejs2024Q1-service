@@ -1,4 +1,4 @@
-import { TArtistId } from './create-album.dto';
+import { TArtistId } from 'src/types/interfaces';
 
 export class UpdateAlbumDto {
   readonly name: string;
