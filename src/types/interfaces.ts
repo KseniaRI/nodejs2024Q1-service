@@ -29,5 +29,17 @@ export interface ITrack {
   duration: number;
 }
 
+export interface IFavorites {
+  artists: string[];
+  albums: string[];
+  tracks: string[];
+}
+
+export interface IFavoritesResponse {
+  artists: IArtist[];
+  albums: IAlbum[];
+  tracks: ITrack[];
+}
+
 export type TArtistId = string | null;
 export type TAlbumId = string | null;

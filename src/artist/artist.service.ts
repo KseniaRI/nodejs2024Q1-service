@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,20 +8,20 @@ import { validateIdFormat } from 'src/heplers/validateIdFormat';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { UpdateArtistDto } from './dto/update-artist.dto';
-import { IArtist } from 'src/types/interfaces';
+import { DB } from 'src/db';
 
 @Injectable()
 export class ArtistService {
-  private artists: IArtist[] = [];
+  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
 
   async getArtists() {
-    return this.artists;
+    return this.db.artists;
   }
 
   async getArtistById(id: string) {
     validateIdFormat(id);
 
-    const artist = this.artists.find((artist) => artist.id === id);
+    const artist = this.db.artists.find((artist) => artist.id === id);
     if (artist) {
       return artist;
     } else {
@@ -43,16 +44,16 @@ export class ArtistService {
         id: uuidv4(),
         ...createArtistDto,
       };
-      this.artists.push(newArtist);
+      this.db.artists.push(newArtist);
       return newArtist;
     }
   }
 
   async deleteArtist(id: string) {
     validateIdFormat(id);
-    const artist = this.artists.find((artist) => artist.id === id);
+    const artist = this.db.artists.find((artist) => artist.id === id);
     if (artist) {
-      this.artists.splice(this.artists.indexOf(artist), 1);
+      this.db.artists.splice(this.db.artists.indexOf(artist), 1);
     } else {
       throw new NotFoundException(`Artist with id ${id} not found`);
     }
@@ -70,14 +71,14 @@ export class ArtistService {
       );
     }
     validateIdFormat(id);
-    const artist = this.artists.find((artist) => artist.id === id);
+    const artist = this.db.artists.find((artist) => artist.id === id);
     if (artist) {
       const updatedArtist = {
         ...artist,
         ...updateArtistDto,
       };
-      const artistIdx = this.artists.indexOf(artist);
-      this.artists[artistIdx] = updatedArtist;
+      const artistIdx = this.db.artists.indexOf(artist);
+      this.db.artists[artistIdx] = updatedArtist;
       return updatedArtist;
     } else {
       throw new NotFoundException(`Artist with id ${id} not found`);

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,13 +10,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { validateIdFormat } from 'src/heplers/validateIdFormat';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IUser } from 'src/types/interfaces';
+import { DB } from 'src/db';
 
 @Injectable()
 export class UserService {
-  private users: IUser[] = [];
+  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
 
   async getUsers() {
-    return this.users.map((user) => {
+    return this.db.users.map((user) => {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
     });
@@ -24,7 +26,7 @@ export class UserService {
   async getUserById(id: string) {
     validateIdFormat(id);
 
-    const user = this.users.find((user) => user.id === id);
+    const user = this.db.users.find((user) => user.id === id);
     if (user) {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
@@ -51,16 +53,16 @@ export class UserService {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
-    this.users.push(newUser);
+    this.db.users.push(newUser);
     const { password, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
   }
 
   async deleteUser(id: string) {
     validateIdFormat(id);
-    const user = this.users.find((user) => user.id === id);
+    const user = this.db.users.find((user) => user.id === id);
     if (user) {
-      this.users.splice(this.users.indexOf(user), 1);
+      this.db.users.splice(this.db.users.indexOf(user), 1);
     } else {
       throw new NotFoundException(`User with id ${id} not found`);
     }
@@ -79,7 +81,7 @@ export class UserService {
     }
     validateIdFormat(id);
 
-    const user: IUser = this.users.find((user) => user.id === id);
+    const user: IUser = this.db.users.find((user) => user.id === id);
 
     if (user) {
       if (updateUserDto.oldPassword !== user.password) {
@@ -91,8 +93,8 @@ export class UserService {
         version: user.version + 1,
         updatedAt: Date.now(),
       };
-      const userIdx = this.users.indexOf(user);
-      this.users[userIdx] = updatedUser;
+      const userIdx = this.db.users.indexOf(user);
+      this.db.users[userIdx] = updatedUser;
       const { password, ...userWithoutPassword } = updatedUser;
       return userWithoutPassword;
     } else {

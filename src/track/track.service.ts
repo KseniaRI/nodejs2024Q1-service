@@ -1,28 +1,28 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { validateIdFormat } from 'src/heplers/validateIdFormat';
-import { ITrack } from 'src/types/interfaces';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { isIdValid } from 'src/heplers/isIdValid';
 import { v4 as uuidv4 } from 'uuid';
-import { UpdateAlbumDto } from 'src/album/dto/update-album.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
+import { DB } from 'src/db';
 
 @Injectable()
 export class TrackService {
-  private tracks: ITrack[] = [];
+  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
 
   async getTracks() {
-    return this.tracks;
+    return this.db.tracks;
   }
 
   async getTrackById(id: string) {
     validateIdFormat(id);
 
-    const track = this.tracks.find((track) => track.id === id);
+    const track = this.db.tracks.find((track) => track.id === id);
     if (track) {
       return track;
     } else {
@@ -44,16 +44,16 @@ export class TrackService {
         id: uuidv4(),
         ...createTrackDto,
       };
-      this.tracks.push(newTrack);
+      this.db.tracks.push(newTrack);
       return newTrack;
     }
   }
 
   async deleteTrack(id: string) {
     validateIdFormat(id);
-    const track = this.tracks.find((track) => track.id === id);
+    const track = this.db.tracks.find((track) => track.id === id);
     if (track) {
-      this.tracks.splice(this.tracks.indexOf(track), 1);
+      this.db.tracks.splice(this.db.tracks.indexOf(track), 1);
     } else {
       throw new NotFoundException(`Track with id ${id} not found`);
     }
@@ -70,14 +70,14 @@ export class TrackService {
       );
     }
     validateIdFormat(id);
-    const track = this.tracks.find((track) => track.id === id);
+    const track = this.db.tracks.find((track) => track.id === id);
     if (track) {
       const updatedTrack = {
         ...track,
         ...updateTrackDto,
       };
-      const trackIdx = this.tracks.indexOf(track);
-      this.tracks[trackIdx] = updatedTrack;
+      const trackIdx = this.db.tracks.indexOf(track);
+      this.db.tracks[trackIdx] = updatedTrack;
       return updatedTrack;
     } else {
       throw new NotFoundException(`Track with id ${id} not found`);

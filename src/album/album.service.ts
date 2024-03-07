@@ -1,27 +1,28 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { validateIdFormat } from 'src/heplers/validateIdFormat';
-import { IAlbum } from 'src/types/interfaces';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { isIdValid } from 'src/heplers/isIdValid';
+import { DB } from 'src/db';
 
 @Injectable()
 export class AlbumService {
-  private albums: IAlbum[] = [];
+  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
 
   async getAlbums() {
-    return this.albums;
+    return this.db.albums;
   }
 
   async getAlbumById(id: string) {
     validateIdFormat(id);
 
-    const album = this.albums.find((album) => album.id === id);
+    const album = this.db.albums.find((album) => album.id === id);
     if (album) {
       return album;
     } else {
@@ -44,16 +45,16 @@ export class AlbumService {
         id: uuidv4(),
         ...createAlbumDto,
       };
-      this.albums.push(newAlbum);
+      this.db.albums.push(newAlbum);
       return newAlbum;
     }
   }
 
   async deleteAlbum(id: string) {
     validateIdFormat(id);
-    const album = this.albums.find((album) => album.id === id);
+    const album = this.db.albums.find((album) => album.id === id);
     if (album) {
-      this.albums.splice(this.albums.indexOf(album), 1);
+      this.db.albums.splice(this.db.albums.indexOf(album), 1);
     } else {
       throw new NotFoundException(`Album with id ${id} not found`);
     }
@@ -71,14 +72,14 @@ export class AlbumService {
       );
     }
     validateIdFormat(id);
-    const album = this.albums.find((album) => album.id === id);
+    const album = this.db.albums.find((album) => album.id === id);
     if (album) {
       const updatedAlbum = {
         ...album,
         ...updateAlbumDto,
       };
-      const albumIdx = this.albums.indexOf(album);
-      this.albums[albumIdx] = updatedAlbum;
+      const albumIdx = this.db.albums.indexOf(album);
+      this.db.albums[albumIdx] = updatedAlbum;
       return updatedAlbum;
     } else {
       throw new NotFoundException(`Album with id ${id} not found`);
