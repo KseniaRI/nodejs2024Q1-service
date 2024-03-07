@@ -1,13 +1,57 @@
-import { Controller, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { FavsService } from './favs.service';
 
 @Controller('favs')
 export class FavsController {
   constructor(private readonly favsService: FavsService) {}
 
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async getAll() {
+    return await this.favsService.getFavs();
+  }
+
   @Post('track/:id')
   @HttpCode(HttpStatus.CREATED)
-  async create(@Param('id') id: string) {
+  async addFavTrack(@Param('id') id: string) {
     return await this.favsService.addTrack(id);
+  }
+
+  @Post('album/:id')
+  @HttpCode(HttpStatus.CREATED)
+  async addFavAlbum(@Param('id') id: string) {
+    return await this.favsService.addAlbum(id);
+  }
+
+  @Post('artist/:id')
+  @HttpCode(HttpStatus.CREATED)
+  async addFavArtist(@Param('id') id: string) {
+    return await this.favsService.addArtist(id);
+  }
+
+  @Delete('artist/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFAvArtist(@Param('id') id: string) {
+    return await this.favsService.deleteArtist(id);
+  }
+
+  @Delete('album/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFavAlbum(@Param('id') id: string) {
+    return await this.favsService.deleteAlbum(id);
+  }
+
+  @Delete('track/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteFavTrack(@Param('id') id: string) {
+    return await this.favsService.deleteTrack(id);
   }
 }

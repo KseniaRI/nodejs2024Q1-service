@@ -10,6 +10,7 @@ import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { isIdValid } from 'src/heplers/isIdValid';
 import { DB } from 'src/db';
+import { ITrack } from 'src/types/interfaces';
 
 @Injectable()
 export class AlbumService {
@@ -55,6 +56,20 @@ export class AlbumService {
     const album = this.db.albums.find((album) => album.id === id);
     if (album) {
       this.db.albums.splice(this.db.albums.indexOf(album), 1);
+      this.db.tracks = this.db.tracks.map((track: ITrack) => {
+        if (track.albumId === id) {
+          return {
+            ...track,
+            albumId: null,
+          };
+        } else {
+          return track;
+        }
+      });
+      if (this.db.favs.albums.includes(id)) {
+        const idx = this.db.favs.albums.indexOf(id);
+        this.db.favs.albums.splice(idx, 1);
+      }
     } else {
       throw new NotFoundException(`Album with id ${id} not found`);
     }

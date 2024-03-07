@@ -54,6 +54,10 @@ export class TrackService {
     const track = this.db.tracks.find((track) => track.id === id);
     if (track) {
       this.db.tracks.splice(this.db.tracks.indexOf(track), 1);
+      if (this.db.favs.tracks.includes(id)) {
+        const idx = this.db.favs.tracks.indexOf(id);
+        this.db.favs.tracks.splice(idx, 1);
+      }
     } else {
       throw new NotFoundException(`Track with id ${id} not found`);
     }
