@@ -19,11 +19,11 @@ npm install
 
 ## Running application
 
+Add .env file as in .env.example with PORT=4000.
+
 ```
 npm start
 ```
-
-Add .env file as in .env.example with PORT=4000.
 
 After starting the app on port (4000 as default) you can open
 in your browser OpenAPI documentation by typing http://localhost:4000/api/.
