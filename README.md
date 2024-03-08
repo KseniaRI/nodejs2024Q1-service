@@ -1,4 +1,4 @@
-# Home Library Service
+# Home Music Library Service
 
 ## Prerequisites
 
