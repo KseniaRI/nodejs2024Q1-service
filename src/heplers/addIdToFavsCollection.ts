@@ -7,6 +7,12 @@ export const addIdToFavsCollection = <T extends { id: string }>(
   favsCollection: string[],
 ): T => {
   validateIdFormat(id);
+  if (favsCollection.includes(id)) {
+    throw new UnprocessableEntityException(
+      `Entity with id ${id} is already in favorites`,
+    );
+  }
+
   const entity = collection.find((entity) => entity.id === id);
   if (entity) {
     favsCollection.push(id);
