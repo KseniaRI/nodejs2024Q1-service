@@ -1,90 +1,61 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { validateIdFormat } from 'src/heplers/validateIdFormat';
-import { CreateTrackDto } from './dto/create-track.dto';
-import { isIdValid } from 'src/heplers/isIdValid';
-import { v4 as uuidv4 } from 'uuid';
-import { UpdateTrackDto } from './dto/update-track.dto';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { DB } from 'src/db';
+import { CreateTrackDto } from './dto/create-track.dto';
+import { UpdateTrackDto } from './dto/update-track.dto';
+import { ITrack } from 'src/types/interfaces';
+import {
+  addEntityToCollection,
+  deleteEntityFromCollection,
+  deleteIdFromFavs,
+  getEntityById,
+  isIdValid,
+  updateEntityInCollection,
+  validateIdFormat,
+} from 'src/heplers';
 
 @Injectable()
 export class TrackService {
   constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
+
+  private isInvalidDto(dto: CreateTrackDto | UpdateTrackDto) {
+    return !dto.name || !isIdValid(dto.albumId) || !isIdValid(dto.artistId);
+  }
 
   async getTracks() {
     return this.db.tracks;
   }
 
   async getTrackById(id: string) {
-    validateIdFormat(id);
-
-    const track = this.db.tracks.find((track) => track.id === id);
-    if (track) {
-      return track;
-    } else {
-      throw new NotFoundException(`Track with id ${id} not found`);
-    }
+    return getEntityById<ITrack>(id, this.db.tracks);
   }
 
   async createTrack(createTrackDto: CreateTrackDto) {
-    if (
-      !createTrackDto.name ||
-      !isIdValid(createTrackDto.albumId) ||
-      !isIdValid(createTrackDto.artistId)
-    ) {
+    if (this.isInvalidDto(createTrackDto)) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',
       );
     } else {
-      const newTrack = {
-        id: uuidv4(),
-        ...createTrackDto,
-      };
-      this.db.tracks.push(newTrack);
-      return newTrack;
+      return addEntityToCollection(createTrackDto, this.db.tracks);
     }
   }
 
   async deleteTrack(id: string) {
-    validateIdFormat(id);
-    const track = this.db.tracks.find((track) => track.id === id);
-    if (track) {
-      this.db.tracks.splice(this.db.tracks.indexOf(track), 1);
-      if (this.db.favs.tracks.includes(id)) {
-        const idx = this.db.favs.tracks.indexOf(id);
-        this.db.favs.tracks.splice(idx, 1);
-      }
-    } else {
-      throw new NotFoundException(`Track with id ${id} not found`);
-    }
+    deleteEntityFromCollection(id, this.db.tracks);
+    deleteIdFromFavs(id, this.db.favs.tracks);
   }
 
   async updateTrack(updateTrackDto: UpdateTrackDto, id: string) {
-    if (
-      !updateTrackDto.name ||
-      !isIdValid(updateTrackDto.albumId) ||
-      !isIdValid(updateTrackDto.artistId)
-    ) {
+    if (this.isInvalidDto(updateTrackDto)) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',
       );
     }
     validateIdFormat(id);
-    const track = this.db.tracks.find((track) => track.id === id);
-    if (track) {
-      const updatedTrack = {
-        ...track,
-        ...updateTrackDto,
-      };
-      const trackIdx = this.db.tracks.indexOf(track);
-      this.db.tracks[trackIdx] = updatedTrack;
-      return updatedTrack;
-    } else {
-      throw new NotFoundException(`Track with id ${id} not found`);
-    }
+    const updatedTrack = updateEntityInCollection<ITrack>(
+      id,
+      updateTrackDto,
+      this.db.tracks,
+    );
+    return updatedTrack;
   }
 }

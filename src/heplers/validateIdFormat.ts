@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { BadRequestException } from '@nestjs/common';
 
 export const validateIdFormat = (id: string) => {

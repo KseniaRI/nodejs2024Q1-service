@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { IAlbum, IArtist, IFavorites, ITrack, IUser } from './types/interfaces';
 
 export interface DB {

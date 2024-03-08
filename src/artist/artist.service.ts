@@ -1,112 +1,68 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { validateIdFormat } from 'src/heplers/validateIdFormat';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
-import { v4 as uuidv4 } from 'uuid';
 import { UpdateArtistDto } from './dto/update-artist.dto';
 import { DB } from 'src/db';
-import { IAlbum, ITrack } from 'src/types/interfaces';
+import { IAlbum, IArtist, ITrack } from 'src/types/interfaces';
+import {
+  addEntityToCollection,
+  deleteEntityFromCollection,
+  deleteIdFromFavs,
+  getEntityById,
+  replaceIdToNull,
+  updateEntityInCollection,
+  validateIdFormat,
+} from 'src/heplers';
 
 @Injectable()
 export class ArtistService {
   constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
+
+  private isInvalidDto(dto: CreateArtistDto | UpdateArtistDto) {
+    return (
+      !Object.keys(dto).includes('grammy') ||
+      !dto.name ||
+      typeof dto.grammy !== 'boolean' ||
+      typeof dto.name !== 'string'
+    );
+  }
 
   async getArtists() {
     return this.db.artists;
   }
 
   async getArtistById(id: string) {
-    validateIdFormat(id);
-
-    const artist = this.db.artists.find((artist) => artist.id === id);
-    if (artist) {
-      return artist;
-    } else {
-      throw new NotFoundException(`Artist with id ${id} not found`);
-    }
+    return getEntityById<IArtist>(id, this.db.artists);
   }
 
   async createArtist(createArtistDto: CreateArtistDto) {
-    if (
-      !Object.keys(createArtistDto).includes('grammy') ||
-      !createArtistDto.name ||
-      typeof createArtistDto.grammy !== 'boolean' ||
-      typeof createArtistDto.name !== 'string'
-    ) {
+    if (this.isInvalidDto(createArtistDto)) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',
       );
     } else {
-      const newArtist = {
-        id: uuidv4(),
-        ...createArtistDto,
-      };
-      this.db.artists.push(newArtist);
-      return newArtist;
+      return addEntityToCollection(createArtistDto, this.db.artists);
     }
   }
 
   async deleteArtist(id: string) {
-    validateIdFormat(id);
-    const artist = this.db.artists.find((artist) => artist.id === id);
-    if (artist) {
-      this.db.artists.splice(this.db.artists.indexOf(artist), 1);
-      this.db.albums = this.db.albums.map((album: IAlbum) => {
-        if (album.artistId === id) {
-          return {
-            ...album,
-            artistId: null,
-          };
-        } else {
-          return album;
-        }
-      });
-      this.db.tracks = this.db.tracks.map((track: ITrack) => {
-        if (track.artistId === id) {
-          return {
-            ...track,
-            artistId: null,
-          };
-        } else {
-          return track;
-        }
-      });
-      if (this.db.favs.artists.includes(id)) {
-        const idx = this.db.favs.artists.indexOf(id);
-        this.db.favs.artists.splice(idx, 1);
-      }
-    } else {
-      throw new NotFoundException(`Artist with id ${id} not found`);
-    }
+    deleteEntityFromCollection(id, this.db.artists);
+    deleteIdFromFavs(id, this.db.favs.artists);
+    this.db.albums = replaceIdToNull<IAlbum>(id, this.db.albums, 'artistId');
+    this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'artistId');
   }
 
   async updateArtist(updateArtistDto: UpdateArtistDto, id: string) {
-    if (
-      !Object.keys(updateArtistDto).includes('grammy') ||
-      !updateArtistDto.name ||
-      typeof updateArtistDto.grammy !== 'boolean' ||
-      typeof updateArtistDto.name !== 'string'
-    ) {
+    if (this.isInvalidDto(updateArtistDto)) {
       throw new BadRequestException(
         'Request body does not contain required fields or their format is not correct',
       );
     }
     validateIdFormat(id);
-    const artist = this.db.artists.find((artist) => artist.id === id);
-    if (artist) {
-      const updatedArtist = {
-        ...artist,
-        ...updateArtistDto,
-      };
-      const artistIdx = this.db.artists.indexOf(artist);
-      this.db.artists[artistIdx] = updatedArtist;
-      return updatedArtist;
-    } else {
-      throw new NotFoundException(`Artist with id ${id} not found`);
-    }
+    const updatedArtist = updateEntityInCollection<IArtist>(
+      id,
+      updateArtistDto,
+      this.db.artists,
+    );
+    return updatedArtist;
   }
 }

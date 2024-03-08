@@ -1,12 +1,12 @@
+import { Inject, Injectable } from '@nestjs/common';
 import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
-import { IAlbum, IFavoritesResponse, ITrack } from 'src/types/interfaces';
+  IAlbum,
+  IArtist,
+  IFavoritesResponse,
+  ITrack,
+} from 'src/types/interfaces';
 import { DB } from 'src/db';
-import { validateIdFormat } from 'src/heplers/validateIdFormat';
+import { addIdToFavsCollection, deleteEntityIdFromFavs } from 'src/heplers';
 
 @Injectable()
 export class FavsService {
@@ -29,74 +29,41 @@ export class FavsService {
   }
 
   async addTrack(id: string) {
-    validateIdFormat(id);
-    const track = this.db.tracks.find((track) => track.id === id);
-    if (track) {
-      this.db.favs.tracks.push(id);
-      return track;
-    } else {
-      throw new UnprocessableEntityException(
-        `Track with id ${id} doesn't exist`,
-      );
-    }
+    const track = addIdToFavsCollection<ITrack>(
+      id,
+      this.db.tracks,
+      this.db.favs.tracks,
+    );
+    return track;
   }
 
   async addAlbum(id: string) {
-    validateIdFormat(id);
-    const album = this.db.albums.find((album) => album.id === id);
-    if (album) {
-      this.db.favs.albums.push(id);
-      return album;
-    } else {
-      throw new UnprocessableEntityException(
-        `Album with id ${id} doesn't exist`,
-      );
-    }
+    const album = addIdToFavsCollection<IAlbum>(
+      id,
+      this.db.albums,
+      this.db.favs.albums,
+    );
+    return album;
   }
 
   async addArtist(id: string) {
-    validateIdFormat(id);
-    const artist = this.db.artists.find((artist) => artist.id === id);
-    if (artist) {
-      this.db.favs.artists.push(id);
-      return artist;
-    } else {
-      throw new UnprocessableEntityException(
-        `Artist with id ${id} doesn't exist`,
-      );
-    }
+    const artist = addIdToFavsCollection<IArtist>(
+      id,
+      this.db.artists,
+      this.db.favs.artists,
+    );
+    return artist;
   }
 
   async deleteArtist(id: string) {
-    validateIdFormat(id);
-    const artist = this.db.favs.artists.find((artistId) => artistId === id);
-    if (artist) {
-      const dbIdx = this.db.favs.artists.indexOf(artist);
-      this.db.favs.artists.splice(dbIdx, 1);
-    } else {
-      throw new NotFoundException(`Artist with id ${id} is not favorite`);
-    }
+    deleteEntityIdFromFavs(id, this.db.favs.artists);
   }
 
   async deleteAlbum(id: string) {
-    validateIdFormat(id);
-    const album = this.db.favs.albums.find((albumId) => albumId === id);
-    if (album) {
-      const dbIdx = this.db.favs.albums.indexOf(album);
-      this.db.favs.albums.splice(dbIdx, 1);
-    } else {
-      throw new NotFoundException(`Album with id ${id} is not favorite`);
-    }
+    deleteEntityIdFromFavs(id, this.db.favs.albums);
   }
 
   async deleteTrack(id: string) {
-    validateIdFormat(id);
-    const track = this.db.favs.tracks.find((trackId) => trackId === id);
-    if (track) {
-      const dbIdx = this.db.favs.tracks.indexOf(track);
-      this.db.favs.tracks.splice(dbIdx, 1);
-    } else {
-      throw new NotFoundException(`Track with id ${id} is not favorite`);
-    }
+    deleteEntityIdFromFavs(id, this.db.favs.tracks);
   }
 }

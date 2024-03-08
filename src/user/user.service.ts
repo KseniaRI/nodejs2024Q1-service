@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   ForbiddenException,
@@ -5,12 +6,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { DB } from 'src/db';
 import { v4 as uuidv4 } from 'uuid';
-import { validateIdFormat } from 'src/heplers/validateIdFormat';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { IUser } from 'src/types/interfaces';
-import { DB } from 'src/db';
+import {
+  deleteEntityFromCollection,
+  getEntityById,
+  validateIdFormat,
+} from 'src/heplers';
 
 @Injectable()
 export class UserService {
@@ -25,13 +30,10 @@ export class UserService {
 
   async getUserById(id: string) {
     validateIdFormat(id);
-
-    const user = this.db.users.find((user) => user.id === id);
+    const user = getEntityById(id, this.db.users);
     if (user) {
       const { password, ...userWithoutPassword } = user;
       return userWithoutPassword;
-    } else {
-      throw new NotFoundException(`User with id ${id} not found`);
     }
   }
 
@@ -59,13 +61,7 @@ export class UserService {
   }
 
   async deleteUser(id: string) {
-    validateIdFormat(id);
-    const user = this.db.users.find((user) => user.id === id);
-    if (user) {
-      this.db.users.splice(this.db.users.indexOf(user), 1);
-    } else {
-      throw new NotFoundException(`User with id ${id} not found`);
-    }
+    deleteEntityFromCollection(id, this.db.users);
   }
 
   async updatePassword(updateUserDto: UpdateUserDto, id: string) {
@@ -80,7 +76,6 @@ export class UserService {
       );
     }
     validateIdFormat(id);
-
     const user: IUser = this.db.users.find((user) => user.id === id);
 
     if (user) {
