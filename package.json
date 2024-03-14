@@ -19,7 +19,10 @@
     "test:refresh": "cross-env TEST_MODE=auth jest --testPathPattern refresh.e2e.spec.ts --noStackTrace --runInBand",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "scan-app-vulnerabilities": "docker run --rm -v //var/run/docker.sock:/var/run/docker.sock aquasec/trivy --scanners vuln image nodejs2024q1-service-app",
+    "scan-postgres-vulnerabilities": "docker run --rm -v //var/run/docker.sock:/var/run/docker.sock aquasec/trivy --scanners vuln image nodejs2024q1-service-postgres",
+    "scan-vulnerabilities": "npm run scan-app-vulnerabilities && npm run scan-postgres-vulnerabilities"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",

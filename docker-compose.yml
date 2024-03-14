@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: library_app
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    networks:
+      - music-library-network
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - 4000:4000
+    command: npm run start:dev
+    depends_on:
+      - postgres
+    restart: always
+  postgres:
+    container_name: library_postgres
+    build:
+      context: .
+      dockerfile: Dockerfile.postgresql
+    networks:
+      - music-library-network
+    env_file:
+      - .env
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - initdb:/docker-entrypoint-initdb.d
+    restart: always
+
+networks:
+  music-library-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  initdb:
