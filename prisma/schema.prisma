@@ -1,0 +1,54 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id     String @id @default(uuid())
+  login  String @unique
+  password String
+  version Int
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Artist {
+  id String @id @default(uuid())
+  name String
+  grammy Boolean
+  albums Album[]
+  tracks Track[]
+}
+
+model Album {
+  id String @id @default(uuid())
+  name String
+  year Int
+  artistId String
+  Artist Artist @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  tracks Track[]
+}
+
+model Track {
+  id String @id @default(uuid())
+  name String
+  artistId String 
+  albumId String
+  duration Int
+  Artist Artist @relation(fields: [artistId], references: [id], onDelete: SetNull)
+  Album Album @relation(fields: [albumId], references: [id], onDelete: SetNull)
+}
+
+model Favorites {
+  artists String[]
+  albums String[]
+  tracks String[]
+
+  @@unique([artists])
+  @@unique([albums])
+  @@unique([tracks])
+}
