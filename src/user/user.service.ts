@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -8,19 +6,15 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { validateIdFormat } from 'src/heplers';
+import { formatDate } from 'src/heplers';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
-  constructor(
-    // @Inject('DB_CONNECTION') private readonly db: DB,
-    private prisma: PrismaService,
-  ) {}
-  // constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
   async getUsers() {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       select: {
         id: true,
         login: true,
@@ -29,10 +23,7 @@ export class UserService {
         updatedAt: true,
       },
     });
-    // return this.db.users.map((user) => {
-    //   const { password, ...userWithoutPassword } = user;
-    //   return userWithoutPassword;
-    // });
+    return users;
   }
 
   async getUserById(id: string) {
@@ -50,52 +41,30 @@ export class UserService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('User with id ${id} not found');
     }
     return user;
-    // validateIdFormat(id);
-    // const user = getEntityById(id, this.db.users);
-    // if (user) {
-    //   const { password, ...userWithoutPassword } = user;
-    //   return userWithoutPassword;
-    // }
   }
 
   async createUser(userDto: CreateUserDto) {
-    if (
-      !userDto.login ||
-      !userDto.password ||
-      typeof userDto.login !== 'string' ||
-      typeof userDto.password !== 'string'
-    ) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
-      );
-    }
-    const currentTime = Date();
     const newUser = await this.prisma.user.create({
       data: {
         ...userDto,
         id: uuidv4(),
         version: 1,
-        createdAt: currentTime,
-        updatedAt: currentTime,
+      },
+      select: {
+        id: true,
+        login: true,
+        version: true,
+        createdAt: true,
+        updatedAt: true,
       },
     });
-    // const newUser = {
-    //   ...userDto,
-    //   id: uuidv4(),
-    //   version: 1,
-    //   createdAt: Date.now(),
-    //   updatedAt: Date.now(),
-    // };
-    // this.db.users.push(newUser);
-    const { password, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+    return newUser;
   }
 
   async deleteUser(id: string) {
-    // deleteEntityFromCollection(id, this.db.users);
     const deletedUser = await this.prisma.user.delete({
       where: {
         id,
@@ -107,18 +76,6 @@ export class UserService {
   }
 
   async updatePassword(updateUserDto: UpdateUserDto, id: string) {
-    if (
-      !updateUserDto.oldPassword ||
-      !updateUserDto.newPassword ||
-      typeof updateUserDto.oldPassword !== 'string' ||
-      typeof updateUserDto.newPassword !== 'string'
-    ) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
-      );
-    }
-    validateIdFormat(id);
-    // const user: IUser = this.db.users.find((user) => user.id === id);
     const user = await this.prisma.user.findUnique({
       where: {
         id,
@@ -129,7 +86,8 @@ export class UserService {
       if (updateUserDto.oldPassword !== user.password) {
         throw new ForbiddenException('Old password is wrong');
       }
-      const currentTime = Date();
+      const currentTime = new Date();
+      const formattedDate = formatDate(currentTime);
       const updatedUser = await this.prisma.user.update({
         where: {
           id,
@@ -138,19 +96,17 @@ export class UserService {
           ...user,
           password: updateUserDto.newPassword,
           version: user.version + 1,
-          updatedAt: currentTime,
+          updatedAt: formattedDate,
+        },
+        select: {
+          id: true,
+          login: true,
+          version: true,
+          createdAt: true,
+          updatedAt: true,
         },
       });
-      // const updatedUser = {
-      //   ...user,
-      //   password: updateUserDto.newPassword,
-      //   version: user.version + 1,
-      //   updatedAt: Date.now(),
-      // };
-      // const userIdx = this.db.users.indexOf(user);
-      // this.db.users[userIdx] = updatedUser;
-      const { password, ...userWithoutPassword } = updatedUser;
-      return userWithoutPassword;
+      return updatedUser;
     } else {
       throw new NotFoundException(`User with id ${id} not found`);
     }
