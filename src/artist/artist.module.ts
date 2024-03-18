@@ -1,16 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ArtistController } from './artist.controller';
 import { ArtistService } from './artist.service';
-import { db } from 'src/db';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   controllers: [ArtistController],
-  providers: [
-    ArtistService,
-    {
-      provide: 'DB_CONNECTION',
-      useValue: db,
-    },
-  ],
+  providers: [ArtistService, PrismaService],
 })
 export class ArtistModule {}

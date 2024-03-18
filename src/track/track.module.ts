@@ -1,16 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TrackController } from './track.controller';
 import { TrackService } from './track.service';
-import { db } from 'src/db';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   controllers: [TrackController],
-  providers: [
-    TrackService,
-    {
-      provide: 'DB_CONNECTION',
-      useValue: db,
-    },
-  ],
+  providers: [TrackService, PrismaService],
 })
 export class TrackModule {}

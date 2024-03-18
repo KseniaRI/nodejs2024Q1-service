@@ -6,8 +6,10 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Post,
   Put,
+  ValidationPipe,
 } from '@nestjs/common';
 import { TrackService } from './track.service';
 import { CreateTrackDto } from './dto/create-track.dto';
@@ -18,34 +20,51 @@ export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
   @Get()
-  @HttpCode(HttpStatus.OK)
   async getAll() {
     return await this.trackService.getTracks();
   }
 
   @Get(':id')
-  @HttpCode(HttpStatus.OK)
-  async getById(@Param('id') id: string) {
+  async getById(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    )
+    id: string,
+  ) {
     return await this.trackService.getTrackById(id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTrackDto: CreateTrackDto) {
+  async create(
+    @Body(new ValidationPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }))
+    createTrackDto: CreateTrackDto,
+  ) {
     return await this.trackService.createTrack(createTrackDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: string) {
+  async delete(
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    )
+    id: string,
+  ) {
     return await this.trackService.deleteTrack(id);
   }
 
   @Put(':id')
-  @HttpCode(HttpStatus.OK)
   async update(
-    @Body() updateTrackDto: UpdateTrackDto,
-    @Param('id') id: string,
+    @Body(new ValidationPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }))
+    updateTrackDto: UpdateTrackDto,
+    @Param(
+      'id',
+      new ParseUUIDPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }),
+    )
+    id: string,
   ) {
     return await this.trackService.updateTrack(updateTrackDto, id);
   }

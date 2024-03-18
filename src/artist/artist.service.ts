@@ -1,68 +1,80 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
-import { DB } from 'src/db';
-import { IAlbum, IArtist, ITrack } from 'src/types/interfaces';
-import {
-  addEntityToCollection,
-  deleteEntityFromCollection,
-  deleteIdFromFavs,
-  getEntityById,
-  replaceIdToNull,
-  updateEntityInCollection,
-  validateIdFormat,
-} from 'src/heplers';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ArtistService {
-  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
-
-  private isInvalidDto(dto: CreateArtistDto | UpdateArtistDto) {
-    return (
-      !Object.keys(dto).includes('grammy') ||
-      !dto.name ||
-      typeof dto.grammy !== 'boolean' ||
-      typeof dto.name !== 'string'
-    );
-  }
+  constructor(private prisma: PrismaService) {}
 
   async getArtists() {
-    return this.db.artists;
+    const artists = await this.prisma.artist.findMany();
+    return artists;
   }
 
   async getArtistById(id: string) {
-    return getEntityById<IArtist>(id, this.db.artists);
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!artist) {
+      throw new NotFoundException('Artist with id ${id} not found');
+    }
+    return artist;
   }
 
   async createArtist(createArtistDto: CreateArtistDto) {
-    if (this.isInvalidDto(createArtistDto)) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
-      );
-    } else {
-      return addEntityToCollection(createArtistDto, this.db.artists);
-    }
+    const newArtist = await this.prisma.artist.create({
+      data: {
+        id: uuidv4(),
+        ...createArtistDto,
+      },
+    });
+    return newArtist;
   }
 
   async deleteArtist(id: string) {
-    deleteEntityFromCollection(id, this.db.artists);
-    deleteIdFromFavs(id, this.db.favs.artists);
-    this.db.albums = replaceIdToNull<IAlbum>(id, this.db.albums, 'artistId');
-    this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'artistId');
+    // deleteEntityFromCollection(id, this.db.artists);
+    // deleteIdFromFavs(id, this.db.favs.artists);
+    // this.db.albums = replaceIdToNull<IAlbum>(id, this.db.albums, 'artistId');
+    // this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'artistId');
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!artist) {
+      throw new NotFoundException(`Artist with id ${id} not found`);
+    } else {
+      await this.prisma.artist.delete({
+        where: {
+          id,
+        },
+      });
+    }
   }
 
   async updateArtist(updateArtistDto: UpdateArtistDto, id: string) {
-    if (this.isInvalidDto(updateArtistDto)) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
-      );
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (artist) {
+      const updatedArtist = await this.prisma.artist.update({
+        where: {
+          id,
+        },
+        data: {
+          ...artist,
+          ...updateArtistDto,
+        },
+      });
+      return updatedArtist;
+    } else {
+      throw new NotFoundException(`Artist with id ${id} not found`);
     }
-    validateIdFormat(id);
-    const updatedArtist = updateEntityInCollection<IArtist>(
-      id,
-      updateArtistDto,
-      this.db.artists,
-    );
-    return updatedArtist;
   }
 }

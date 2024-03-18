@@ -1,68 +1,99 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { DB } from 'src/db';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-import { IAlbum, ITrack } from 'src/types/interfaces';
-import {
-  addEntityToCollection,
-  deleteEntityFromCollection,
-  deleteIdFromFavs,
-  getEntityById,
-  isIdValid,
-  replaceIdToNull,
-  updateEntityInCollection,
-  validateIdFormat,
-} from 'src/heplers';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AlbumService {
-  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
-
-  private isInvalidDto(dto: CreateAlbumDto | UpdateAlbumDto) {
-    return (
-      !dto.name ||
-      typeof dto.year !== 'number' ||
-      typeof dto.name !== 'string' ||
-      !isIdValid(dto.artistId)
-    );
-  }
+  constructor(private prisma: PrismaService) {}
 
   async getAlbums() {
-    return this.db.albums;
+    const albums = await this.prisma.album.findMany();
+    return albums;
   }
 
   async getAlbumById(id: string) {
-    return getEntityById<IAlbum>(id, this.db.albums);
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!album) {
+      throw new NotFoundException(`Album with id ${id} not found`);
+    }
+    return album;
   }
 
   async createAlbum(createAlbumDto: CreateAlbumDto) {
-    if (this.isInvalidDto(createAlbumDto)) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id: createAlbumDto.artistId,
+      },
+    });
+    if (!artist) {
+      throw new NotFoundException(
+        `Artist with id ${createAlbumDto.artistId} not found`,
       );
-    } else {
-      return addEntityToCollection(createAlbumDto, this.db.albums);
     }
+
+    const newAlbum = await this.prisma.album.create({
+      data: {
+        id: uuidv4(),
+        ...createAlbumDto,
+      },
+    });
+    return newAlbum;
   }
 
   async deleteAlbum(id: string) {
-    deleteEntityFromCollection(id, this.db.albums);
-    this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'albumId');
-    deleteIdFromFavs(id, this.db.favs.albums);
+    // deleteEntityFromCollection(id, this.db.albums);
+    // this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'albumId');
+    // deleteIdFromFavs(id, this.db.favs.albums);
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!album) {
+      throw new NotFoundException(`Album with id ${id} not found`);
+    }
+    await this.prisma.album.delete({
+      where: {
+        id,
+      },
+    });
   }
 
   async updateAlbum(updateAlbumDto: UpdateAlbumDto, id: string) {
-    if (this.isInvalidDto(updateAlbumDto)) {
-      throw new BadRequestException(
-        'Request body does not contain required fields or their format is not correct',
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id: updateAlbumDto.artistId,
+      },
+    });
+    if (!artist) {
+      throw new NotFoundException(
+        `Artist with id ${updateAlbumDto.artistId} not found`,
       );
     }
-    validateIdFormat(id);
-    const updatedAlbum = updateEntityInCollection<IAlbum>(
-      id,
-      updateAlbumDto,
-      this.db.albums,
-    );
-    return updatedAlbum;
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (album) {
+      const updatedAlbum = await this.prisma.album.update({
+        where: {
+          id,
+        },
+        data: {
+          ...album,
+          ...updateAlbumDto,
+        },
+      });
+      return updatedAlbum;
+    } else {
+      throw new NotFoundException(`Album with id ${id} not found`);
+    }
   }
 }
