@@ -1,69 +1,157 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  IAlbum,
-  IArtist,
-  IFavoritesResponse,
-  ITrack,
-} from 'src/types/interfaces';
-import { DB } from 'src/db';
-import { addIdToFavsCollection, deleteEntityIdFromFavs } from 'src/heplers';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class FavsService {
-  constructor(@Inject('DB_CONNECTION') private readonly db: DB) {}
+  constructor(private prisma: PrismaService) {}
 
   async getFavs() {
-    const favsResponse: IFavoritesResponse = {
-      artists: [],
-      albums: [],
-      tracks: [],
-    };
-    Object.entries(this.db.favs).map(([key, value]) => {
-      const favorites = value.map((favId: string) => {
-        const favorite = this.db[key].find((el: any) => el.id === favId);
-        return favorite;
-      });
-      favsResponse[key] = favorites;
+    const favorites = await this.prisma.favorites.findFirst({
+      select: {
+        albums: true,
+        artists: true,
+        tracks: true,
+      },
     });
-    return favsResponse;
+    return favorites;
   }
 
   async addTrack(id: string) {
-    const track = addIdToFavsCollection<ITrack>(
-      id,
-      this.db.tracks,
-      this.db.favs.tracks,
-    );
+    const track = await this.prisma.track.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!track) {
+      throw new UnprocessableEntityException(
+        `Track with id ${id} doesn't exist`,
+      );
+    }
+
+    await this.prisma.track.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: 'favoriteId',
+      } as Prisma.TrackUpdateInput,
+    });
     return track;
   }
 
   async addAlbum(id: string) {
-    const album = addIdToFavsCollection<IAlbum>(
-      id,
-      this.db.albums,
-      this.db.favs.albums,
-    );
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!album) {
+      throw new UnprocessableEntityException(
+        `Album with id ${id} doesn't exist`,
+      );
+    }
+
+    await this.prisma.album.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: 'favoriteId',
+      } as Prisma.TrackUpdateInput,
+    });
     return album;
   }
 
   async addArtist(id: string) {
-    const artist = addIdToFavsCollection<IArtist>(
-      id,
-      this.db.artists,
-      this.db.favs.artists,
-    );
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!artist) {
+      throw new UnprocessableEntityException(
+        `Artist with id ${id} doesn't exist`,
+      );
+    }
+
+    await this.prisma.artist.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: 'favoriteId',
+      } as Prisma.TrackUpdateInput,
+    });
     return artist;
   }
 
   async deleteArtist(id: string) {
-    deleteEntityIdFromFavs(id, this.db.favs.artists);
+    const artist = await this.prisma.artist.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!artist) {
+      throw new UnprocessableEntityException(
+        `Artist with id ${id} doesn't exist`,
+      );
+    }
+    await this.prisma.artist.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: null,
+      } as Prisma.TrackUpdateInput,
+    });
   }
 
   async deleteAlbum(id: string) {
-    deleteEntityIdFromFavs(id, this.db.favs.albums);
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!album) {
+      throw new UnprocessableEntityException(
+        `Album with id ${id} doesn't exist`,
+      );
+    }
+    await this.prisma.album.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: null,
+      } as Prisma.TrackUpdateInput,
+    });
   }
 
   async deleteTrack(id: string) {
-    deleteEntityIdFromFavs(id, this.db.favs.tracks);
+    const track = await this.prisma.track.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!track) {
+      throw new UnprocessableEntityException(
+        `Track with id ${id} doesn't exist`,
+      );
+    }
+    await this.prisma.track.update({
+      where: {
+        id,
+      },
+      data: {
+        favoritesId: null,
+      } as Prisma.TrackUpdateInput,
+    });
   }
 }

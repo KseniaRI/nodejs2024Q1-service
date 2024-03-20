@@ -12,6 +12,8 @@ export class CreateTrackDto {
   @IsNotEmpty()
   readonly albumId: TAlbumId;
 
+  readonly favoritesId: string | null;
+
   @IsNumber()
   @IsNotEmpty()
   readonly duration: number;

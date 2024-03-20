@@ -8,4 +8,6 @@ export class CreateArtistDto {
   @IsBoolean()
   @IsNotEmpty()
   readonly grammy: boolean;
+
+  readonly favoritesId: string | null;
 }

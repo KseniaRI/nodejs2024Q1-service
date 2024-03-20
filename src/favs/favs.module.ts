@@ -1,16 +1,10 @@
 import { Module } from '@nestjs/common';
 import { FavsController } from './favs.controller';
 import { FavsService } from './favs.service';
-import { db } from 'src/db';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Module({
   controllers: [FavsController],
-  providers: [
-    FavsService,
-    {
-      provide: 'DB_CONNECTION',
-      useValue: db,
-    },
-  ],
+  providers: [FavsService, PrismaService],
 })
 export class FavsModule {}

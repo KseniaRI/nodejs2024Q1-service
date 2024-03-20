@@ -5,7 +5,6 @@ import { deleteEntityFromCollection } from './deleteEntityFromCollection';
 import { deleteIdFromFavs } from './deleteIdFromFavs';
 import { getEntityById } from './getEntityById';
 import { isIdValid } from './isIdValid';
-import { replaceIdToNull } from './replaceIdToNull';
 import { updateEntityInCollection } from './updateEntityInCollection';
 import { validateIdFormat } from './validateIdFormat';
 import { formatDate } from './formatDate';
@@ -18,7 +17,6 @@ export {
   deleteIdFromFavs,
   getEntityById,
   isIdValid,
-  replaceIdToNull,
   updateEntityInCollection,
   validateIdFormat,
   formatDate,

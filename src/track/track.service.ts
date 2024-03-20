@@ -50,8 +50,6 @@ export class TrackService {
   }
 
   async deleteTrack(id: string) {
-    // deleteEntityFromCollection(id, this.db.tracks);
-    // deleteIdFromFavs(id, this.db.favs.tracks);
     const track = await this.prisma.track.findUnique({
       where: {
         id,

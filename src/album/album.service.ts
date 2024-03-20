@@ -47,9 +47,6 @@ export class AlbumService {
   }
 
   async deleteAlbum(id: string) {
-    // deleteEntityFromCollection(id, this.db.albums);
-    // this.db.tracks = replaceIdToNull<ITrack>(id, this.db.tracks, 'albumId');
-    // deleteIdFromFavs(id, this.db.favs.albums);
     const album = await this.prisma.album.findUnique({
       where: {
         id,

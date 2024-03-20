@@ -10,6 +10,8 @@ export class CreateAlbumDto {
   @IsNotEmpty()
   readonly year: number;
 
+  readonly favoritesId: string | null;
+
   @IsNotEmpty()
   readonly artistId: TArtistId;
 }
