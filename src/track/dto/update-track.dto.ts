@@ -6,10 +6,8 @@ export class UpdateTrackDto {
   @IsNotEmpty()
   readonly name: string;
 
-  @IsNotEmpty()
   readonly artistId: TArtistId;
 
-  @IsNotEmpty()
   readonly albumId: TAlbumId;
 
   readonly favoritesId: string | null;

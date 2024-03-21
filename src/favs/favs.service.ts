@@ -7,6 +7,12 @@ export class FavsService {
   constructor(private prisma: PrismaService) {}
 
   async getFavs() {
+    const existingFavorites = await this.prisma.favorites.findFirst();
+    if (!existingFavorites) {
+      await this.prisma.favorites.create({
+        data: {} as Prisma.FavoritesCreateInput,
+      });
+    }
     const favorites = await this.prisma.favorites.findFirst({
       select: {
         albums: true,
@@ -14,7 +20,23 @@ export class FavsService {
         tracks: true,
       },
     });
-    return favorites;
+
+    const removeFavoritesId = (items: any[]) => {
+      return items.map((item) => {
+        const { favoritesId, ...rest } = item;
+        return rest;
+      });
+    };
+
+    const artists = removeFavoritesId(favorites.artists);
+    const albums = removeFavoritesId(favorites.albums);
+    const tracks = removeFavoritesId(favorites.tracks);
+
+    return {
+      artists,
+      albums,
+      tracks,
+    };
   }
 
   async addTrack(id: string) {
@@ -28,6 +50,13 @@ export class FavsService {
       throw new UnprocessableEntityException(
         `Track with id ${id} doesn't exist`,
       );
+    }
+
+    const existingFavorites = await this.prisma.favorites.findFirst();
+    if (!existingFavorites) {
+      await this.prisma.favorites.create({
+        data: {} as Prisma.FavoritesCreateInput,
+      });
     }
 
     await this.prisma.track.update({
@@ -54,6 +83,13 @@ export class FavsService {
       );
     }
 
+    const existingFavorites = await this.prisma.favorites.findFirst();
+    if (!existingFavorites) {
+      await this.prisma.favorites.create({
+        data: {} as Prisma.FavoritesCreateInput,
+      });
+    }
+
     await this.prisma.album.update({
       where: {
         id,
@@ -76,6 +112,13 @@ export class FavsService {
       throw new UnprocessableEntityException(
         `Artist with id ${id} doesn't exist`,
       );
+    }
+
+    const existingFavorites = await this.prisma.favorites.findFirst();
+    if (!existingFavorites) {
+      await this.prisma.favorites.create({
+        data: {} as Prisma.FavoritesCreateInput,
+      });
     }
 
     await this.prisma.artist.update({

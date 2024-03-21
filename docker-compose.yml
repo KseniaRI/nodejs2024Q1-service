@@ -14,9 +14,8 @@ services:
       - .:/app
       - /app/node_modules
     ports:
-      - 4000:4000
-      - 5555:5555
-    command: npm run start
+      - ${PORT}:${PORT}
+      - ${STUDIO_PORT}:${STUDIO_PORT}
     depends_on:
       - db
     restart: always
@@ -33,11 +32,13 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
-      PG_DATA: /var/lib/postgresql/data
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     ports:
-      - 5432:5432
+      - ${POSTGRES_PORT}:${POSTGRES_PORT}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - pglogs:/var/log/postgresql
       - initdb:/docker-entrypoint-initdb.d
     restart: always
 
@@ -47,4 +48,5 @@ networks:
 
 volumes:
   pgdata:
+  pglogs:
   initdb:

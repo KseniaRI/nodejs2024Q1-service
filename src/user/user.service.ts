@@ -2,11 +2,11 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { formatDate } from 'src/heplers';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -47,11 +47,27 @@ export class UserService {
   }
 
   async createUser(userDto: CreateUserDto) {
+    const userWithLogin = await this.prisma.user.findUnique({
+      where: {
+        login: userDto.login,
+      },
+    });
+    if (userWithLogin) {
+      throw new UnprocessableEntityException(
+        `User with login ${userDto.login} already exists`,
+      );
+    }
+
+    const now = Date.now();
+    const createdAt = Math.floor(now / 1000);
+    const updatedAt = Math.floor(now / 1000);
     const newUser = await this.prisma.user.create({
       data: {
         ...userDto,
         id: uuidv4(),
         version: 1,
+        createdAt,
+        updatedAt,
       },
       select: {
         id: true,
@@ -91,8 +107,8 @@ export class UserService {
       if (updateUserDto.oldPassword !== user.password) {
         throw new ForbiddenException('Old password is wrong');
       }
-      const currentTime = new Date();
-      const formattedDate = formatDate(currentTime);
+      const now = Date.now();
+      const updatedAt = Math.floor(now / 1000) + 1;
       const updatedUser = await this.prisma.user.update({
         where: {
           id,
@@ -101,7 +117,7 @@ export class UserService {
           ...user,
           password: updateUserDto.newPassword,
           version: user.version + 1,
-          updatedAt: formattedDate,
+          updatedAt,
         },
         select: {
           id: true,

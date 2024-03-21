@@ -1,18 +1,20 @@
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm install
+RUN npm ci && npm cache clean --force
 
 COPY . .
 
-COPY ./dist ./dist
+RUN npm run build
 
-CMD ["npm", "run", "start"]
+FROM node:20-alpine
 
-ENV PORT 4000
+WORKDIR /app
 
-EXPOSE $PORT
+COPY --from=build /app .
+
+CMD ["npm", "run", "start:migrate"]

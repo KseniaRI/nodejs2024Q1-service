@@ -12,6 +12,5 @@ export class CreateAlbumDto {
 
   readonly favoritesId: string | null;
 
-  @IsNotEmpty()
   readonly artistId: TArtistId;
 }

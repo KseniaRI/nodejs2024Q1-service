@@ -7,7 +7,6 @@ import { getEntityById } from './getEntityById';
 import { isIdValid } from './isIdValid';
 import { updateEntityInCollection } from './updateEntityInCollection';
 import { validateIdFormat } from './validateIdFormat';
-import { formatDate } from './formatDate';
 
 export {
   addEntityToCollection,
@@ -19,5 +18,4 @@ export {
   isIdValid,
   updateEntityInCollection,
   validateIdFormat,
-  formatDate,
 };
