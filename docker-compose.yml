@@ -5,13 +5,13 @@ services:
     container_name: app
     build:
       context: .
-      dockerfile: Dockerfile.app
+      dockerfile: Dockerfile
     networks:
       - music-library-network
     env_file:
       - .env
     volumes:
-      - .:/app
+      - ./src:/app/src
       - /app/node_modules
     ports:
       - ${PORT}:${PORT}
@@ -22,8 +22,8 @@ services:
   db:
     container_name: db
     build:
-      context: .
-      dockerfile: Dockerfile.postgresql
+      context: ./database
+      dockerfile: Dockerfile
     networks:
       - music-library-network
     env_file:
@@ -39,7 +39,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - pglogs:/var/log/postgresql
-      - initdb:/docker-entrypoint-initdb.d
     restart: always
 
 networks:
@@ -49,4 +48,3 @@ networks:
 volumes:
   pgdata:
   pglogs:
-  initdb:
