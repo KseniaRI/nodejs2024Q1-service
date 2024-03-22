@@ -8,21 +8,28 @@ import { v4 as uuidv4 } from 'uuid';
 export class AlbumService {
   constructor(private prisma: PrismaService) {}
 
-  async getAlbums() {
-    const albums = await this.prisma.album.findMany();
-    return albums;
-  }
-
-  async getAlbumById(id: string) {
+  private async getExistedAlbum(id: string) {
     const album = await this.prisma.album.findUnique({
       where: {
         id,
       },
     });
     if (!album) {
-      throw new NotFoundException(`Album with id ${id} not found`);
+      throw new NotFoundException('Album with id ${id} not found');
     }
     return album;
+  }
+
+  async getAlbums() {
+    const albums = await this.prisma.album.findMany();
+    return albums;
+  }
+
+  async getAlbumById(id: string) {
+    const album = await this.getExistedAlbum(id);
+    if (album) {
+      return album;
+    }
   }
 
   async createAlbum(createAlbumDto: CreateAlbumDto) {
@@ -36,27 +43,18 @@ export class AlbumService {
   }
 
   async deleteAlbum(id: string) {
-    const album = await this.prisma.album.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!album) {
-      throw new NotFoundException(`Album with id ${id} not found`);
+    const album = await this.getExistedAlbum(id);
+    if (album) {
+      await this.prisma.album.delete({
+        where: {
+          id,
+        },
+      });
     }
-    await this.prisma.album.delete({
-      where: {
-        id,
-      },
-    });
   }
 
   async updateAlbum(updateAlbumDto: UpdateAlbumDto, id: string) {
-    const album = await this.prisma.album.findUnique({
-      where: {
-        id,
-      },
-    });
+    const album = await this.getExistedAlbum(id);
     if (album) {
       const updatedAlbum = await this.prisma.album.update({
         where: {
@@ -68,8 +66,6 @@ export class AlbumService {
         },
       });
       return updatedAlbum;
-    } else {
-      throw new NotFoundException(`Album with id ${id} not found`);
     }
   }
 }

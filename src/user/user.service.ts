@@ -13,6 +13,18 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
+  private async getExistedUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
+  }
+
   async getUsers() {
     const users = await this.prisma.user.findMany({
       select: {
@@ -59,15 +71,14 @@ export class UserService {
     }
 
     const now = Date.now();
-    const createdAt = Math.floor(now / 1000);
-    const updatedAt = Math.floor(now / 1000);
+    const currentTime = Math.floor(now / 1000);
     const newUser = await this.prisma.user.create({
       data: {
         ...userDto,
         id: uuidv4(),
         version: 1,
-        createdAt,
-        updatedAt,
+        createdAt: currentTime,
+        updatedAt: currentTime,
       },
       select: {
         id: true,
@@ -81,28 +92,18 @@ export class UserService {
   }
 
   async deleteUser(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!user) {
-      throw new NotFoundException(`User with id ${id} not found`);
+    const user = await this.getExistedUser(id);
+    if (user) {
+      await this.prisma.user.delete({
+        where: {
+          id,
+        },
+      });
     }
-    await this.prisma.user.delete({
-      where: {
-        id,
-      },
-    });
   }
 
   async updatePassword(updateUserDto: UpdateUserDto, id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-    });
-
+    const user = await this.getExistedUser(id);
     if (user) {
       if (updateUserDto.oldPassword !== user.password) {
         throw new ForbiddenException('Old password is wrong');
@@ -128,8 +129,6 @@ export class UserService {
         },
       });
       return updatedUser;
-    } else {
-      throw new NotFoundException(`User with id ${id} not found`);
     }
   }
 }

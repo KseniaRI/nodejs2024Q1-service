@@ -1,4 +1,3 @@
-import { TAlbumId, TArtistId } from 'src/types/interfaces';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UpdateTrackDto {
@@ -6,9 +5,9 @@ export class UpdateTrackDto {
   @IsNotEmpty()
   readonly name: string;
 
-  readonly artistId: TArtistId;
+  readonly artistId: string | null;
 
-  readonly albumId: TAlbumId;
+  readonly albumId: string | null;
 
   readonly favoritesId: string | null;
 

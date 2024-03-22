@@ -8,21 +8,28 @@ import { v4 as uuidv4 } from 'uuid';
 export class TrackService {
   constructor(private prisma: PrismaService) {}
 
-  async getTracks() {
-    const tracks = await this.prisma.track.findMany();
-    return tracks;
-  }
-
-  async getTrackById(id: string) {
+  private async getExistedTrack(id: string) {
     const track = await this.prisma.track.findUnique({
       where: {
         id,
       },
     });
     if (!track) {
-      throw new NotFoundException(`Track with id ${id} not found`);
+      throw new NotFoundException('Track with id ${id} not found');
     }
     return track;
+  }
+
+  async getTracks() {
+    const tracks = await this.prisma.track.findMany();
+    return tracks;
+  }
+
+  async getTrackById(id: string) {
+    const track = await this.getExistedTrack(id);
+    if (track) {
+      return track;
+    }
   }
 
   async createTrack(createTrackDto: CreateTrackDto) {
@@ -36,27 +43,18 @@ export class TrackService {
   }
 
   async deleteTrack(id: string) {
-    const track = await this.prisma.track.findUnique({
-      where: {
-        id,
-      },
-    });
-    if (!track) {
-      throw new NotFoundException(`Track with id ${id} not found`);
+    const track = await this.getExistedTrack(id);
+    if (track) {
+      await this.prisma.track.delete({
+        where: {
+          id,
+        },
+      });
     }
-    await this.prisma.track.delete({
-      where: {
-        id,
-      },
-    });
   }
 
   async updateTrack(updateTrackDto: UpdateTrackDto, id: string) {
-    const track = await this.prisma.track.findUnique({
-      where: {
-        id,
-      },
-    });
+    const track = await this.getExistedTrack(id);
     if (track) {
       const updatedTrack = await this.prisma.track.update({
         where: {
@@ -68,8 +66,6 @@ export class TrackService {
         },
       });
       return updatedTrack;
-    } else {
-      throw new NotFoundException(`Track with id ${id} not found`);
     }
   }
 }

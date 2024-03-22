@@ -1,4 +1,3 @@
-import { TArtistId } from 'src/types/interfaces';
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateAlbumDto {
@@ -12,5 +11,5 @@ export class CreateAlbumDto {
 
   readonly favoritesId: string | null;
 
-  readonly artistId: TArtistId;
+  readonly artistId: string | null;
 }
