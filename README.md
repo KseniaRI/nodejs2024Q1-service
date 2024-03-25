@@ -17,6 +17,12 @@ The built image is available on https://hub.docker.com/r/kseniapi/nodejs2024q1-s
 git clone {repository URL}
 ```
 
+## Switch to the task2 branch
+
+```
+git checkout task2-dev
+```
+
 ## Add .env
 
 Add .env file as in .env.example.
