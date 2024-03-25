@@ -48,7 +48,7 @@ For more information about OpenAPI/Swagger please visit https://swagger.io/.
 
 ## Database GUI: prisma studio
 
-You can see and check the database work in prisma studio. http://localhost:5555 by default.
+You can see and check the database work in prisma studio. (http://localhost:5555 by default).
 
 After containers running _open new terminal_ and run:
 
