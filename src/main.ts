@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import * as yamljs from 'yamljs';
 import * as dotenv from 'dotenv';
 import { LogsService } from './logs/logs.service';
+import { CustomExceptionFilter } from './utils/custom-exception.filter';
 
 dotenv.config();
 async function bootstrap() {
@@ -11,7 +12,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(LogsService));
-
+  app.useGlobalFilters(new CustomExceptionFilter(new LogsService()));
   // const app = await NestFactory.create(AppModule);
   // const logger = new LogsService();
   // app.useLogger(logger);

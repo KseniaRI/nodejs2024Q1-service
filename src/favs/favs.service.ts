@@ -2,6 +2,7 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { validate } from 'uuid';
 
 @Injectable()
 export class FavsService {
@@ -76,6 +77,7 @@ export class FavsService {
   }
 
   async addTrack(id: string) {
+    validate(id);
     const track = await this.getTrack(id);
     if (track) {
       await this.checkExistingFavorites();
@@ -92,6 +94,7 @@ export class FavsService {
   }
 
   async addAlbum(id: string) {
+    validate(id);
     const album = await this.getAlbum(id);
     if (album) {
       await this.checkExistingFavorites();
@@ -108,6 +111,7 @@ export class FavsService {
   }
 
   async addArtist(id: string) {
+    validate(id);
     const artist = await this.getArtist(id);
     if (artist) {
       await this.checkExistingFavorites();
@@ -124,6 +128,7 @@ export class FavsService {
   }
 
   async deleteArtist(id: string) {
+    validate(id);
     const artist = await this.getArtist(id);
     if (artist) {
       await this.prisma.artist.update({
@@ -138,6 +143,7 @@ export class FavsService {
   }
 
   async deleteAlbum(id: string) {
+    validate(id);
     const album = await this.getAlbum(id);
     if (album) {
       await this.prisma.album.update({
@@ -152,6 +158,7 @@ export class FavsService {
   }
 
   async deleteTrack(id: string) {
+    validate(id);
     const track = await this.getTrack(id);
     if (track) {
       await this.prisma.track.update({

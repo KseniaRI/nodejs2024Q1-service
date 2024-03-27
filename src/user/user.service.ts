@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -39,6 +39,7 @@ export class UserService {
   }
 
   async getUserById(id: string) {
+    validate(id);
     const user = await this.prisma.user.findUnique({
       where: {
         id,
@@ -92,6 +93,7 @@ export class UserService {
   }
 
   async deleteUser(id: string) {
+    validate(id);
     const user = await this.getExistedUser(id);
     if (user) {
       await this.prisma.user.delete({
@@ -103,6 +105,7 @@ export class UserService {
   }
 
   async updatePassword(updateUserDto: UpdateUserDto, id: string) {
+    validate(id);
     const user = await this.getExistedUser(id);
     if (user) {
       if (updateUserDto.oldPassword !== user.password) {

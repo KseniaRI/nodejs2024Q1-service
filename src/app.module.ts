@@ -11,6 +11,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { LogsService } from './logs/logs.service';
 import { LogsModule } from './logs/logs.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
+import { CustomExceptionFilter } from './utils/custom-exception.filter';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { LoggerMiddleware } from './utils/logger.middleware';
     LogsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, LogsService],
+  providers: [AppService, PrismaService, LogsService, CustomExceptionFilter],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 
 @Injectable()
 export class TrackService {
@@ -15,7 +15,7 @@ export class TrackService {
       },
     });
     if (!track) {
-      throw new NotFoundException('Track with id ${id} not found');
+      throw new NotFoundException(`Track with id ${id} not found`);
     }
     return track;
   }
@@ -26,6 +26,7 @@ export class TrackService {
   }
 
   async getTrackById(id: string) {
+    validate(id);
     const track = await this.getExistedTrack(id);
     if (track) {
       return track;
@@ -43,6 +44,7 @@ export class TrackService {
   }
 
   async deleteTrack(id: string) {
+    validate(id);
     const track = await this.getExistedTrack(id);
     if (track) {
       await this.prisma.track.delete({
@@ -54,6 +56,7 @@ export class TrackService {
   }
 
   async updateTrack(updateTrackDto: UpdateTrackDto, id: string) {
+    validate(id);
     const track = await this.getExistedTrack(id);
     if (track) {
       const updatedTrack = await this.prisma.track.update({

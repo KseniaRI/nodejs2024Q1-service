@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, validate } from 'uuid';
 
 @Injectable()
 export class AlbumService {
@@ -15,7 +15,7 @@ export class AlbumService {
       },
     });
     if (!album) {
-      throw new NotFoundException('Album with id ${id} not found');
+      throw new NotFoundException(`Album with id ${id} not found`);
     }
     return album;
   }
@@ -26,6 +26,7 @@ export class AlbumService {
   }
 
   async getAlbumById(id: string) {
+    validate(id);
     const album = await this.getExistedAlbum(id);
     if (album) {
       return album;
@@ -43,6 +44,7 @@ export class AlbumService {
   }
 
   async deleteAlbum(id: string) {
+    validate(id);
     const album = await this.getExistedAlbum(id);
     if (album) {
       await this.prisma.album.delete({
@@ -54,6 +56,7 @@ export class AlbumService {
   }
 
   async updateAlbum(updateAlbumDto: UpdateAlbumDto, id: string) {
+    validate(id);
     const album = await this.getExistedAlbum(id);
     if (album) {
       const updatedAlbum = await this.prisma.album.update({
