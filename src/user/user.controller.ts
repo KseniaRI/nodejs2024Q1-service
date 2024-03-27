@@ -20,13 +20,11 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  // @HttpCode(HttpStatus.OK)
   async getAll() {
     return await this.userService.getUsers();
   }
 
   @Get(':id')
-  // @HttpCode(HttpStatus.OK)
   async getById(
     @Param(
       'id',
@@ -59,7 +57,6 @@ export class UserController {
   }
 
   @Put(':id')
-  // @HttpCode(HttpStatus.OK)
   async update(
     @Body(new ValidationPipe({ errorHttpStatusCode: HttpStatus.BAD_REQUEST }))
     updateUserDto: UpdateUserDto,
