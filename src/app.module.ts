@@ -12,6 +12,7 @@ import { LogsService } from './logs/logs.service';
 import { LogsModule } from './logs/logs.module';
 import { LoggerMiddleware } from './utils/logger.middleware';
 import { CustomExceptionFilter } from './utils/custom-exception.filter';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CustomExceptionFilter } from './utils/custom-exception.filter';
     TrackModule,
     FavsModule,
     LogsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, LogsService, CustomExceptionFilter],

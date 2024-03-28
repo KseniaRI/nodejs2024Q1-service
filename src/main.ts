@@ -13,9 +13,6 @@ async function bootstrap() {
   });
   app.useLogger(app.get(LogsService));
   app.useGlobalFilters(new CustomExceptionFilter(new LogsService()));
-  // const app = await NestFactory.create(AppModule);
-  // const logger = new LogsService();
-  // app.useLogger(logger);
 
   const document: OpenAPIObject = yamljs.load('./doc/api.yaml');
   SwaggerModule.setup('api', app, document);
