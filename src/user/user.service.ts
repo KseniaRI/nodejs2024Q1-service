@@ -2,7 +2,6 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import { v4 as uuidv4, validate } from 'uuid';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -23,6 +22,15 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
     return user;
+  }
+
+  async checkExistedUserLogin(login: string) {
+    const userWithLogin = await this.prisma.user.findUnique({
+      where: {
+        login,
+      },
+    });
+    return userWithLogin;
   }
 
   async getUsers() {
@@ -60,17 +68,6 @@ export class UserService {
   }
 
   async createUser(userDto: CreateUserDto) {
-    const userWithLogin = await this.prisma.user.findUnique({
-      where: {
-        login: userDto.login,
-      },
-    });
-    if (userWithLogin) {
-      throw new UnprocessableEntityException(
-        `User with login ${userDto.login} already exists`,
-      );
-    }
-
     const now = Date.now();
     const currentTime = Math.floor(now / 1000);
     const newUser = await this.prisma.user.create({

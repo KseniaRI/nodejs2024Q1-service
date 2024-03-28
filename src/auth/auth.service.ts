@@ -1,6 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
@@ -10,35 +13,52 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    private prisma: PrismaService,
   ) {}
 
-  async generateTocken(login: string, id: string) {
-    const payload = { login, id };
+  private async generateToken(login: string, id: string) {
+    const payload = { login, userId: id };
     return {
-      tocken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(payload),
+      login,
+      id,
     };
+  }
+  private async validateUser(login: string, password: string) {
+    const user = await this.userService.checkExistedUserLogin(login);
+    const samePasswords = await bcrypt.compare(password, user.password);
+    if (user && samePasswords) {
+      return user;
+    }
+    throw new ForbiddenException('Incorrect login or password');
+  }
+  private async validateDto(userDto: CreateUserDto) {
+    const dtoNonValid =
+      !userDto.login ||
+      !userDto.password ||
+      typeof userDto.password !== 'string' ||
+      typeof userDto.login !== 'string';
+
+    if (dtoNonValid) {
+      throw new BadRequestException(
+        'Login o password are missed or their types are incorrect',
+      );
+    }
   }
 
   async signup(userDto: CreateUserDto) {
-    const userWithLogin = await this.prisma.user.findUnique({
-      where: {
-        login: userDto.login,
-      },
-    });
-    if (userWithLogin) {
-      throw new ConflictException(
-        `User with login ${userDto.login} already exists`,
-      );
-    }
+    await this.validateDto(userDto);
     const salt = process.env.CRYPT_SALT;
     const hashPsw = await bcrypt.hash(userDto.password, Number(salt));
-    const newUser = await this.userService.createUser({
+    const user = await this.userService.createUser({
       ...userDto,
       password: hashPsw,
     });
-    return this.generateTocken(newUser.login, newUser.id);
+    return this.generateToken(user.login, user.id);
   }
 
-  //   async login(userDto: CreateUserDto) {}
+  async login(userDto: CreateUserDto) {
+    await this.validateDto(userDto);
+    const user = await this.validateUser(userDto.login, userDto.password);
+    return await this.generateToken(user.login, user.id);
+  }
 }
