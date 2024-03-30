@@ -71,13 +71,16 @@ or from container:
 docker exec app npm run test
 ```
 
-To run only one of all test suites
+To run all tests including auth tests (94 should pass):
 
 ```
-npm run test -- <path to suite>
+npm run test:auth
+```
 
-example:
-npm run test test/users.e2e.spec.ts
+To run only refresh token tests (4 should pass):
+
+```
+npm run test:refresh
 ```
 
 ## Vulnerability scanning
