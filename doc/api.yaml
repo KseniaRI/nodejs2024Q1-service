@@ -149,9 +149,14 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
+                  accessToken:
                     type: string
-                description: JWT Token
+                    description: JWT Token
+                  refreshToken:
+                    type: string
+                    description: JWT Token
+        400:
+          description: Bad request
         403:
           description: Incorrect login or password
   /auth/signup:
@@ -183,12 +188,56 @@ paths:
                 - login
                 - password
       responses:
-        204:
+        201:
           description: Successful signup
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: user id
         400:
           description: Bad request
-        409:
-          description: Conflict. Login already exists
+  /auth/refresh:
+    post:
+      tags:
+        - Refresh
+      security: []
+      summary: Refresh
+      description: Get new pair of Access token and Refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              title: example
+              properties:
+                refreshToken:
+                  type: string
+                  description: refreshToken
+              required:
+                - refreshToken
+      responses:
+        200:
+          description: new tokens.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Token
+                  accessToken:
+                    type: string
+                    description: JWT Token
+        403:
+          description: Refresh token is invalid or expired
+        401:
+          description: no refreshToken in body
   /user:
     get:
       tags:
