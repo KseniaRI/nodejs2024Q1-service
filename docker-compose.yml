@@ -33,7 +33,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
+      PGPORT: ${POSTGRES_PORT}
     ports:
       - ${POSTGRES_PORT}:${POSTGRES_PORT}
     volumes:
